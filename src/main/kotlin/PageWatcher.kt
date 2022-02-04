@@ -9,10 +9,10 @@ import it.skrape.fetcher.skrape
 import it.skrape.selects.eachText
 import it.skrape.selects.html5.p
 import kotlinx.coroutines.runBlocking
-import java.time.LocalDateTime.now
+import mu.KLogging
 import kotlin.time.Duration.Companion.seconds
 
-object PageWatcher {
+object PageWatcher : KLogging() {
   val watchUrl = System.getenv("WATCH_URL")
   val alertUrl = System.getenv("ALERT_URL")
 
@@ -24,7 +24,7 @@ object PageWatcher {
 
   private fun fetchPage(url: String) =
     skrape(HttpFetcher) {
-      println("Fetching page at ${now()}...")
+      logger.info { "Fetching page..." }
 
       request { this.url = url }
 
@@ -46,8 +46,8 @@ object PageWatcher {
       val currPage = fetchPage(watchUrl)
 
       if (currPage != origPage) {
-        println("Page changed at ${now()}:")
-        println(currPage.allParagraphs.subtract(origPage.allParagraphs))
+        logger.info { "Page changes:" }
+        logger.info { currPage.allParagraphs.subtract(origPage.allParagraphs) }
 
         runBlocking {
           val client = HttpClient(CIO)
@@ -56,7 +56,7 @@ object PageWatcher {
         break
       }
 
-      println("Page unchanged at ${now()}")
+      logger.info { "Page unchanged" }
     }
   }
 }
