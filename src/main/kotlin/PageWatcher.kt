@@ -13,8 +13,8 @@ import mu.KLogging
 import kotlin.time.Duration.Companion.seconds
 
 object PageWatcher : KLogging() {
-  val watchUrl = System.getenv("WATCH_URL")
-  val alertUrl = System.getenv("ALERT_URL")
+  val watchUrl = System.getenv("WATCH_URL") ?: System.getProperty("watch.url")
+  val alertUrl = System.getenv("ALERT_URL") ?: System.getProperty("alert.url")
 
   data class WebPage(
     var httpStatusCode: Int = 0,

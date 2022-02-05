@@ -1,7 +1,8 @@
 plugins {
     id 'java'
     id 'org.jetbrains.kotlin.jvm' version '1.6.10'
-    id "com.github.ben-manes.versions" version '0.41.0'
+    id 'com.github.johnrengelman.shadow' version '7.1.2'
+    id 'com.github.ben-manes.versions' version '0.41.0'
 }
 
 group 'org.example'
@@ -12,6 +13,9 @@ repositories {
     mavenCentral()
 }
 
+def mainName = 'PageWatcher'
+def appName = 'server'
+
 dependencies {
     implementation "org.jetbrains.kotlin:kotlin-stdlib"
     implementation("it.skrape:skrapeit:1.2.0")
@@ -21,4 +25,26 @@ dependencies {
     implementation "io.github.microutils:kotlin-logging:2.1.21"
     implementation "ch.qos.logback:logback-classic:1.2.10"
     implementation "org.slf4j:jul-to-slf4j:1.7.35"
+}
+
+shadowJar {
+    zip64 true
+    mergeServiceFiles()
+    exclude "META-INF/*.SF"
+    exclude 'META-INF/*.DSA'
+    exclude 'META-INF/*.RSA'
+    exclude "LICENSE*"
+}
+
+task uberjar(type: Jar, dependsOn: shadowJar) {
+    zip64 true
+    archiveFileName = 'server.jar'
+    manifest {
+        attributes('Implementation-Title': appName)
+        attributes('Implementation-Version': version)
+        attributes('Built-Date': new Date())
+        attributes('Built-JDK': System.getProperty('java.version'))
+        attributes('Main-Class': mainName)
+    }
+    from zipTree(shadowJar.archiveFile)
 }
