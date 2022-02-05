@@ -8,14 +8,13 @@ import it.skrape.fetcher.extractIt
 import it.skrape.fetcher.skrape
 import it.skrape.selects.eachText
 import it.skrape.selects.html5.p
+import kotlinx.cli.ArgParser
+import kotlinx.cli.ArgType
 import kotlinx.coroutines.runBlocking
 import mu.KLogging
 import kotlin.time.Duration.Companion.seconds
 
 object PageWatcher : KLogging() {
-  val watchUrl = System.getenv("WATCH_URL") ?: System.getProperty("watch.url")
-  val alertUrl = System.getenv("ALERT_URL") ?: System.getProperty("alert.url")
-
   data class WebPage(
     var httpStatusCode: Int = 0,
     var httpStatusMessage: String = "",
@@ -39,11 +38,19 @@ object PageWatcher : KLogging() {
 
   @JvmStatic
   fun main(args: Array<String>) {
-    val origPage = fetchPage(watchUrl)
+    val parser = ArgParser("pagewatcher")
+    val watchUrl by parser.option(ArgType.String, shortName = "w", description = "Watch URL")
+    val alertUrl by parser.option(ArgType.String, shortName = "a", description = "Alert URL")
+    parser.parse(args)
+
+    val watchVal = watchUrl ?: System.getenv("WATCH_URL") ?: System.getProperty("watch.url")
+    val alertVal = alertUrl ?: System.getenv("ALERT_URL") ?: System.getProperty("alert.url")
+
+    val origPage = fetchPage(watchVal)
 
     while (true) {
       Thread.sleep(60.seconds.inWholeMilliseconds)
-      val currPage = fetchPage(watchUrl)
+      val currPage = fetchPage(watchVal)
 
       if (currPage != origPage) {
         logger.info { "Page changes:" }
@@ -51,7 +58,7 @@ object PageWatcher : KLogging() {
 
         runBlocking {
           val client = HttpClient(CIO)
-          val response: HttpResponse = client.get(alertUrl)
+          val response: HttpResponse = client.get(alertVal)
         }
         break
       }
